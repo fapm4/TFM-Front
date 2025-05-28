@@ -1,10 +1,27 @@
 import { writable } from "svelte/store";
-
+import Swal from "sweetalert2";
 ///////////////////////////////////////////////////////////////////////////
 // Conexón con el backend
 const IP = 'localhost';
 const PORT = 8000;
 export const BACKEND_URL = `http://${IP}:${PORT}`;
+
+///////////////////////////////////////////////////////////////////////////
+// Funciones de alerta
+export function swalSpinner(text, icon='info') {
+    Swal.fire({
+        icon: icon == null ? 'success' : null,
+        title: text,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        html: `<l-line-spinner
+            size="40"
+            stroke="3"
+            speed="1"
+            color="black" 
+            ></l-line-spinner>`
+    });
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Manejar localStorage
