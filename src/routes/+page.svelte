@@ -1,6 +1,16 @@
 <script>
 	import Navbar from "../components/Navbar.svelte";
 	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
+	import { on } from "svelte/events";
+
+	onMount(() => {
+		flushStorage();
+	});
+	
+	function flushStorage() {
+		localStorage.clear()
+	}
 
 	function handleClick() {
 		goto("/upload_file");

@@ -21,20 +21,21 @@ export async function fetchVoices(idioma, tono) {
 	return data.voices;
 }
 
-export async function playTextToSpeech(idiomaSelected, tonoSelected, voiceSelected, sampleText) {
-	if (idiomaSelected === "" || tonoSelected === "" || voiceSelected === "") {
-		Swal.fire({
-			icon: 'error',
-			title: 'Error',
-			text: "Por favor, selecciona un idioma, tono y voz.",
-			confirmButtonText: 'Aceptar',
-			confirmButtonColor: '#FFB84D',
-		});
-
-		return;
+export async function playTextToSpeech(idiomaSelected, tonoSelected, voiceSelected, sampleText, review) {
+	if (review == false) {
+		if (idiomaSelected === "" || tonoSelected === "" || voiceSelected === "") {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: "Por favor, selecciona un idioma, tono y voz.",
+				confirmButtonText: 'Aceptar',
+				confirmButtonColor: '#FFB84D',
+			});
+	
+			return;
+		}
 	}
 
-	console.log(voiceSelected);
 	let idioma = Object.keys(idiomaDiccionario).find(key => idiomaDiccionario[key] === idiomaSelected);
 	const url = `${BACKEND_URL}/api/tts/text_to_speech/${voiceSelected}/`;
 

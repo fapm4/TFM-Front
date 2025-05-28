@@ -75,19 +75,19 @@
 
 	function saveLocalStorage(video_id) {
 		setLocalStorage("video_id", video_id);
-		setLocalStorage("optionSelected", $optionSelected);
-		setLocalStorage("thresholdSelected", $thresholdSelected);
+		setLocalStorage("option_selected", $optionSelected);
+		setLocalStorage("threshold_selected", $thresholdSelected);
 
 		if ($optionSelected === "option2_texto" || $optionSelected === "option3_ia") {
-		    setLocalStorage("idiomaSelected", $idiomaSelected);
-		    setLocalStorage("tonoSelected", $tonoSelected);
-		    setLocalStorage("voiceSelected", $voiceSelected);
+		    setLocalStorage("idioma_selected", $idiomaSelected);
+		    setLocalStorage("tono_selected", $tonoSelected);
+		    setLocalStorage("voice_selected", $voiceSelected);
 		}
 		if ($thresholdSelected === "option5_thresh_manual") {
-		    setLocalStorage("thresholdValue", $thresholdValue);
+		    setLocalStorage("threshold_value", $thresholdValue);
 		}
-		setLocalStorage("fileDetails", $fileDetails);
-		setLocalStorage("fileUploaded", $fileUploaded);
+		setLocalStorage("file_details", $fileDetails);
+		setLocalStorage("file_uploaded", $fileUploaded);
 	}
 
 	async function subirArchivos(){
@@ -187,7 +187,7 @@
 
 			setLocalStorage("descriptions", data.descriptions);
 			setLocalStorage("file_url", data.file_url);
-			setLocalStorage("file_name", data.name);
+			setLocalStorage("file_name", data.file_name);
 
 			goto("/show_descriptions");
 		});

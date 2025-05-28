@@ -123,8 +123,8 @@
 								class="datalist-input"
 							></textarea>
 							<button
-								on:click={() =>
-									playTextToSpeech(localIdioma, localTono, localVoice, localSampleText)
+								on:click={async () =>
+									await playTextToSpeech(localIdioma, localTono, localVoice, localSampleText)
 								}
 								disabled={!localSampleText || !localVoice}
 							>

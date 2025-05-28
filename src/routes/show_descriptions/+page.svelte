@@ -2,7 +2,8 @@
 	import Navbar from "../../components/Navbar.svelte";
 	import Row from "../../components/show_descriptions/Row.svelte";
 	import { onMount, onDestroy } from "svelte";
-	import { getLocalStorage } from "$lib/basic";
+	import { getLocalStorage, BACKEND_URL } from "$lib/basic";
+	import Swal from "sweetalert2";
 
 	import {
 		videoId,
@@ -12,12 +13,14 @@
 	} from "$lib/writables";
 
 	let videoLoaded = false;
-
+	let optionSelected;
+	
 	onMount(() => {
 		if ($videoId === "") {
 			const storedVideoId = getLocalStorage("video_id");
 			const storedFileUrl = getLocalStorage("file_url");
 			const storedFileName = getLocalStorage("file_name");
+			optionSelected = getLocalStorage("option_selected");
 			const storedDescriptions = getLocalStorage("descriptions");
 
 			if (storedVideoId && storedFileUrl && storedFileName) {
@@ -57,15 +60,125 @@
 
 	function handleDescriptions() {
 	   console.log("Handling descriptions...");
-	   console.log("Descriptions: ", $descriptions);
+	   console.log("Current descriptions:", $descriptions);
 
 	   $descriptions.forEach((desc) => {
 			desc.start_at = formatTime(desc.start_at);
 			desc.end_at = formatTime(desc.end_at);
 	   });
 	}
-</script>
 
+	function removeDescriptionFromStorage(video_id, desc_id) {
+		console.log("Removing description:", video_id, desc_id);
+
+		let storedDescriptions = getLocalStorage("descriptions");
+
+		if (!Array.isArray(storedDescriptions)) {
+			console.error("No valid descriptions found in localStorage.");
+			return;
+		}
+
+		const updatedDescriptions = storedDescriptions.filter(
+			desc => !(desc.video_id === video_id && desc.description_id === desc_id)
+		);
+
+		console.log("Updated descriptions:", updatedDescriptions);
+
+		descriptions.set(updatedDescriptions);
+		localStorage.setItem("descriptions", JSON.stringify(updatedDescriptions));
+
+		handleDescriptions();
+	}
+
+	function updateDescriptionTime(video_id, desc_id, type, value) {
+		console.log("Updating description time:", video_id, desc_id, type, value);
+
+		let storedDescriptions = getLocalStorage("descriptions");
+
+		if (!Array.isArray(storedDescriptions)) {
+			console.error("No valid descriptions found in localStorage.");
+			return;
+		}
+
+		const updatedDescriptions = storedDescriptions.map(desc => {
+			if (desc.video_id === video_id && desc.description_id === desc_id) {
+				return { ...desc, [type]: value };
+			}
+			return desc;
+		});
+
+		console.log("Updated descriptions:", updatedDescriptions);
+
+		descriptions.set(updatedDescriptions);
+		localStorage.setItem("descriptions", JSON.stringify(updatedDescriptions));
+
+		handleDescriptions();
+	}
+
+	function updateDescriptionText(video_id, desc_id, text) {
+		console.log("Updating description text:", video_id, desc_id, text);
+
+		let storedDescriptions = getLocalStorage("descriptions");
+
+		if (!Array.isArray(storedDescriptions)) {
+			console.error("No valid descriptions found in localStorage.");
+			return;
+		}
+
+		const updatedDescriptions = storedDescriptions.map(desc => {
+			if (desc.video_id === video_id && desc.description_id === desc_id) {
+				return { ...desc, text: text };
+			}
+			return desc;
+		});
+
+		console.log("Updated descriptions:", updatedDescriptions);
+
+		descriptions.set(updatedDescriptions);
+		localStorage.setItem("descriptions", JSON.stringify(updatedDescriptions));
+
+		handleDescriptions();
+	}
+
+	async function addDescription(video_id) {
+		console.log("Adding new description...");
+
+		const newDescription = {
+			video_id: video_id,
+			start_at: "00:00:00",
+			end_at: "00:00:00",
+			text: "",
+		};
+
+		const reponse = await fetch(`${BACKEND_URL}/api/videos/add_description/${video_id}/`, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(newDescription)
+		});
+
+		if (reponse.status !== 200) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'No se pudo añadir la descripción.',
+				confirmButtonText: 'Aceptar',
+				confirmButtonColor: '#FFB84D',
+			});
+			console.error("Failed to add description:", reponse.status);
+			return;
+		}
+
+		let storedDescriptions = getLocalStorage("descriptions") || [];
+		storedDescriptions.push(newDescription);
+
+		descriptions.set(storedDescriptions);
+		localStorage.setItem("descriptions", JSON.stringify(storedDescriptions));
+
+		handleDescriptions();
+	}
+</script>
 
 <main>
 	<Navbar/>
@@ -96,18 +209,31 @@
 					<tbody>
 						{#each $descriptions as desc}
 							<Row 
-								videoId={$videoId} 
+								video_id={$videoId} 
 								start={desc.start_at} 
 								end={desc.end_at} 
-								text=""
+								desc_id={desc.description_id}
+								text={desc.text}
+								onDelete={removeDescriptionFromStorage}
+								onUpdateTime={updateDescriptionTime}
+								onUpdateDescription={updateDescriptionText}
+								option_selected={optionSelected}
 							/>
 						{/each}
 					</tbody>
 				</table>
 			</div>
 		</div>
-	{/if}
 
+		<div class="button-container">
+			<button id="add-button" on:click={() => addDescription($videoId)}>
+				Añadir Descripción
+			</button>
+			<button>
+				Procesar Video
+			</button>
+		</div>
+	{/if}
 </main>
 
 <style>
@@ -169,12 +295,20 @@
 	h3 {
 		margin-bottom: 10px;
 	}
+
+	#start-button {
+		margin-bottom: 40px;
+	}
+
 	.button-container {
 		display: flex;
 		justify-content: center;
+		gap: 20px; /* espacio entre los botones */
 		margin-top: 20px;
 	}
+
 	button {
+		margin-top: 30px;
 		background-color: #FFB84D;
 		color: white;
 		border: none;
@@ -185,18 +319,11 @@
 		transition: all 0.3s ease;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
+
 	button:hover {
 		background-color: white;
 		border: 2px solid #FFE6CC;
 		color: #FFB84D;
 	}
-	#start-button {
-		margin-bottom: 40px;
-	}
-	hr {
-		border: 0;
-		height: 2px;
-		background-color: #FFB84D;
-		margin: 50px auto;
-	}
+
 </style>
