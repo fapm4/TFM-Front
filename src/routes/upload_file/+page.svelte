@@ -1,9 +1,15 @@
 <script>
-	import Navbar from "../../components/Navbar.svelte";
+	// import Navbar from "../../components/Navbar.svelte";
 
-	import FileUploader from "../../components/upload/FileUploader.svelte";
-	import OptionsHandler from "../../components/upload/OptionsHandler.svelte";
-	import ThresholdHandler from "../../components/upload/ThresholdHandler.svelte";
+	// import FileUploader from "../../components/upload/FileUploader.svelte";
+	// import OptionsHandler from "../../components/upload/OptionsHandler.svelte";
+	// import ThresholdHandler from "../../components/upload/ThresholdHandler.svelte";
+
+	import Navbar from "$lib/components/Navbar.svelte";
+	import FileUploader from "$lib/components/upload/FileUploader.svelte";
+	import OptionsHandler from "$lib/components/upload/OptionsHandler.svelte";
+	import ThresholdHandler from "$lib/components/upload/ThresholdHandler.svelte";
+
 	
 	import { 
 		fileUploaded,
@@ -73,23 +79,6 @@
 		return true;
 	}
 
-	function saveLocalStorage(video_id) {
-		setLocalStorage("video_id", video_id);
-		setLocalStorage("option_selected", $optionSelected);
-		setLocalStorage("threshold_selected", $thresholdSelected);
-
-		if ($optionSelected === "option2_texto" || $optionSelected === "option3_ia") {
-		    setLocalStorage("idioma_selected", $idiomaSelected);
-		    setLocalStorage("tono_selected", $tonoSelected);
-		    setLocalStorage("voice_selected", $voiceSelected);
-		}
-		if ($thresholdSelected === "option5_thresh_manual") {
-		    setLocalStorage("threshold_value", $thresholdValue);
-		}
-		setLocalStorage("file_details", $fileDetails);
-		setLocalStorage("file_uploaded", $fileUploaded);
-	}
-
 	async function subirArchivos(){
 		// console.log($fileUploaded);
 		// console.log($fileObject);
@@ -143,15 +132,13 @@
 		}
 
 		const video_id = data.video_id;
-
-		saveLocalStorage(video_id)
 		
 		swalSpinner('Guardando archivo');
 
-		handleFileProcessing(video_id);
+		handleFileProcessing(video_id, $optionSelected);
 	}
 
-	async function handleFileProcessing(video_id){
+	async function handleFileProcessing(video_id, optionSelected){
 		swalSpinner('Extrayendo silencios');
 		const response = await fetch(`${BACKEND_URL}/api/videos/get_silences/${video_id}/`, {
 			method: "GET",
@@ -175,21 +162,48 @@
 		Swal.fire({
 			icon: 'success',
 			title: 'Éxito',
-			text: "El archivo se ha procesado correctamente correctamente.",
+			text: "El archivo se ha procesado correctamente.",
 			confirmButtonColor: '#FFB84D',
 			showConfirmButton: false,
 			timer: 2000,
-		}).then(() => {
+		}).then(async () => {
 			descriptions.set(data.descriptions);
 			videoId.set(video_id);
 			fileUrl.set(data.file_url);
 			fileName.set(data.file_name);
 
-			setLocalStorage("descriptions", data.descriptions);
-			setLocalStorage("file_url", data.file_url);
-			setLocalStorage("file_name", data.file_name);
+			if (optionSelected == 'option3_ia') {
+				swalSpinner('Generando descripciones', true);
 
-			goto("/show_descriptions");
+				const response = await fetch(`${BACKEND_URL}/api/videos/generate_descriptions/${video_id}/`, {
+					method: "GET"
+				});
+
+				if (response.status != 200) {
+					const data = await response.json();
+					console.log(data);
+					Swal.fire({
+						icon: 'error', 
+						title: 'Error',
+						text: data.message,
+						confirmButtonText: 'Aceptar',
+						confirmButtonColor: '#FFB84D',
+					});
+				} else {
+					Swal.fire({
+						icon: 'success',
+						title: 'Éxito',
+						text: "Las descripciones se han generado correctamente.",
+						confirmButtonColor: '#FFB84D',
+						showConfirmButton: false,
+						timer: 2000,
+					}).then(() => {
+						goto(`/show_descriptions/${video_id}`);
+					});
+				}
+			}
+
+			goto(`/show_descriptions/${video_id}`);
 		});
 
 	}

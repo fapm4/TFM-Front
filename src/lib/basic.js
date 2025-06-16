@@ -8,12 +8,13 @@ export const BACKEND_URL = `http://${IP}:${PORT}`;
 
 ///////////////////////////////////////////////////////////////////////////
 // Funciones de alerta
-export function swalSpinner(text, icon='info') {
+export function swalSpinner(text, icon='info', disableClckOutside=false) {
     Swal.fire({
         icon: icon == null ? 'success' : null,
         title: text,
         timerProgressBar: true,
         showConfirmButton: false,
+        allowOutsideClick: disableClckOutside,
         html: `<l-line-spinner
             size="40"
             stroke="3"

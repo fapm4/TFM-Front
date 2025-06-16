@@ -4,8 +4,6 @@
 	import { playTextToSpeech } from "$lib/voiceUtils";
 	import { BACKEND_URL } from "$lib/basic";
 	import Swal from "sweetalert2";
-
-	console.log(option_selected);
 	
 	async function playDescription(text) {
 		let voiceSelected = localStorage.getItem("voice_selected");
@@ -59,6 +57,8 @@
 			});
 			return;
 		}
+
+		console.log(desc_id);
 
 		const response = await fetch(`${BACKEND_URL}/api/videos/update_time_description/${video_id}/${desc_id}/`, {
 			method: "PUT",
@@ -155,11 +155,11 @@
 			
 		{:else}
 			<textarea 
-				bind:value={text} 
+				value={text}
+				on:input={(e) => autoResize(e)}
+				on:change={(e) => updateDescription(e.target.value)}
 				placeholder="Añade una descripción..." 
 				class="description-textarea"
-				on:input={autoResize}
-				on:change={() => updateDescription(text)}
 			/>
 		{/if}
 
